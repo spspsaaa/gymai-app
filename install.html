@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>GYM AI — установка</title>
+<style>
+  :root{--bg:#10110e;--card:#191b16;--fg:#f5f6f1;--soft:#c1c7b6;--lime:#e0ff83;--line:#2a2d26}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,sans-serif;
+       display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;max-width:380px;width:100%}
+  h1{font-size:19px;margin:0 0 8px}
+  p{font-size:13px;line-height:1.6;color:var(--soft);margin:0 0 14px}
+  ol{padding-left:20px;font-size:13px;line-height:1.7;color:var(--soft);margin:0 0 18px}
+  a.btn{display:block;background:var(--lime);color:#111;text-align:center;text-decoration:none;font-weight:800;
+        padding:14px 16px;border-radius:14px;font-size:15px}
+  .small{font-size:11px;color:#6f7466;margin-top:14px;text-align:center;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Добавить GYM AI на экран «домой»</h1>
+  <p>Сейчас откроется Telegram — там появится предложение добавить приложение на главный экран телефона.</p>
+  <ol>
+    <li>Нажмите кнопку ниже.</li>
+    <li>В Telegram подтвердите <b>«Добавить»</b> — или следуйте подсказке iOS.</li>
+    <li>Иконка GYM AI появится на вашем рабочем столе.</li>
+  </ol>
+  <a class="btn" id="go" href="https://t.me/GymAi_robot/?startapp&addToHomeScreen">Открыть Telegram</a>
+  <p class="small">Если ничего не произошло — открой эту страницу в Safari и нажми кнопку ещё раз.</p>
+</div>
+<script>
+(function(){
+  var target='https://t.me/GymAi_robot/?startapp&addToHomeScreen';
+  var go=document.getElementById('go');
+  function isTelegram(){
+    try{
+      if(window.Telegram&&window.Telegram.WebApp) return true;
+      if(/Telegram/i.test(navigator.userAgent)) return true;
+    }catch(e){}
+    return false;
+  }
+  // В Safari сразу уводим в Telegram-ссылку с addToHomeScreen
+  if(!isTelegram()){
+    setTimeout(function(){ try{ location.replace(target); }catch(e){} }, 350);
+  }
+  go.addEventListener('click',function(e){
+    e.preventDefault();
+    try{ window.open(target,'_blank','noopener'); }catch(err){}
+    setTimeout(function(){ try{ location.href=target; }catch(e){} }, 600);
+  });
+})();
+</script>
+</body>
+</html>
