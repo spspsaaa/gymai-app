@@ -161,6 +161,8 @@ global.__api={themeGet,themeSet,themeApply,renderThemeUI,renderSession,saveDraft
   histRender,renderAccount};
 global.__srv=SRV;
 global.__keys={srvIsDataKey,srvDataKeys,srvDecode};
+global.SRV_KEYS=SRV_KEYS;
+global.SRV_LOCAL_ONLY=SRV_LOCAL_ONLY;
 `;
 const ctx=global; vm.createContext(ctx);
 try{ vm.runInContext(main+probe,ctx,{filename:'index.html'}); }
@@ -327,6 +329,8 @@ SUITES.sync=async function(){
   rawSet('gymai_workouts',JSON.stringify([{old:1}]));
   rawSet('gymai_presets',JSON.stringify(['x']));
   rawSet('gymai_session_token','keepme');
+  rawSet('gymai_acct_token','secret-token');
+  rawSet('gymai_users',JSON.stringify({a:1}));
   rawSet('gymai_setup_1',JSON.stringify({items:['a']}));
   S._remote={gymai_workouts:[{new:2}]};
   await S.syncAll();
@@ -334,12 +338,34 @@ SUITES.sync=async function(){
   chk('токен сессии не трогается', localStorage.getItem('gymai_session_token')==='keepme');
   chk('устаревший динамический ключ удаляется', localStorage.getItem('gymai_setup_1')===null, localStorage.getItem('gymai_setup_1'));
   chk('push отправляет только ключи данных', Array.isArray(pushed)&&pushed.indexOf('gymai_workouts')>-1&&pushed.indexOf('gymai_session_token')===-1, JSON.stringify(pushed));
+  chk('токен аккаунта не уходит в push', pushed.indexOf('gymai_acct_token')===-1, JSON.stringify(pushed));
+  chk('кэш пользователей не уходит в push', pushed.indexOf('gymai_users')===-1, JSON.stringify(pushed));
+  chk('токен аккаунта остался на месте', localStorage.getItem('gymai_acct_token')==='secret-token');
+  chk('кэш пользователей остался на месте', localStorage.getItem('gymai_users')!==null);
 
   /* the token filter itself */
   chk('токены не считаются данными', K.srvIsDataKey('gymai_acct_token')===false&&K.srvIsDataKey('gymai_session_token')===false&&K.srvIsDataKey('gymai_users')===false);
   chk('случайный чужой ключ не считается данными', K.srvIsDataKey('some_random_key')===false);
   chk('известный ключ данных считается данными', K.srvIsDataKey('gymai_workouts')===true);
   chk('динамический ключ дня считается данными', K.srvIsDataKey('gymai_setup_0')===true);
+  chk('ключ аккаунта отсекается даже при попадании в SRV_KEYS', (function(){
+    /* The guard is doubled: SRV_LOCAL_ONLY is checked before SRV_KEYS, so a
+       token that also sits in SRV_KEYS is still not treated as data. A single
+       removal of either list therefore changes nothing — only breaking both
+       leaks the token. The test below reproduces that combined break. */
+    return K.srvIsDataKey('gymai_acct_token')===false;})());
+  chk('токен не попадает в данные и при двойной поломке (SRV_KEYS + LOCAL_ONLY)', (function(){
+    const savedKeys=ctx.SRV_KEYS.slice(),savedLocal=ctx.SRV_LOCAL_ONLY.slice();
+    try{
+      ctx.SRV_KEYS.push('gymai_acct_token');
+      ctx.SRV_LOCAL_ONLY.length=0;
+      const leaked=K.srvIsDataKey('gymai_acct_token')===true;
+      ctx.SRV_KEYS.length=0;ctx.SRV_KEYS.push.apply(ctx.SRV_KEYS,savedKeys);
+      ctx.SRV_LOCAL_ONLY.length=0;ctx.SRV_LOCAL_ONLY.push.apply(ctx.SRV_LOCAL_ONLY,savedLocal);
+      /* the double break MUST leak — otherwise the guard is not real */
+      return leaked===true && K.srvIsDataKey('gymai_acct_token')===false;
+    }catch(e){ return false; }
+  })());
   chk('srvDataKeys не отдаёт токены', (function(){localStorage.clear();['gymai_workouts','gymai_acct_token','gymai_users','gymai_setup_2'].forEach(function(k){rawSet(k,'{}');});const d=K.srvDataKeys();return d.indexOf('gymai_workouts')>-1&&d.indexOf('gymai_setup_2')>-1&&d.indexOf('gymai_acct_token')===-1&&d.indexOf('gymai_users')===-1;})());
 };
 
