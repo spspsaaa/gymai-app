@@ -301,14 +301,57 @@ out.filter(x=>!x[1]).forEach(x=>console.log('  ПРОВАЛ:',x[0]));
 
 };
 
+
+SUITES.sync=async function(){
+  console.log('--- СИНХРОНИЗАЦИЯ С СЕРВЕРОМ ---');
+  const S=ctx.__srv;
+  /* the client intercepts localStorage.setItem — the harness must not, so the
+     remote values have to be applied through the raw storage object */
+  const rawSet=localStorage.setItem.bind(localStorage);
+
+  /* a fake network layer */
+  let pushed=null;
+  S.pull=async function(){return this._remote||null;};
+  S.push=async function(keys){pushed=keys;};
+  S.hasAuth=function(){return true;};
+
+  localStorage.clear();
+  rawSet('gymai_workouts',JSON.stringify([{old:1}]));
+  rawSet('gymai_name','Локальное');
+  S._remote={gymai_workouts:[{new:2}],gymai_name:{__raw:'Из Сервера'}};
+  await S.syncAll();
+  chk('удалённое значение применяется', JSON.parse(rawSet.length?localStorage.getItem('gymai_workouts'):'[]')[0].new===2, localStorage.getItem('gymai_workouts'));
+  chk('строка с маркером разворачивается', localStorage.getItem('gymai_name')==='Из Сервера', localStorage.getItem('gymai_name'));
+
+  localStorage.clear();
+  rawSet('gymai_workouts',JSON.stringify([{old:1}]));
+  rawSet('gymai_presets',JSON.stringify(['x']));
+  rawSet('gymai_session_token','keepme');
+  rawSet('gymai_setup_1',JSON.stringify({items:['a']}));
+  S._remote={gymai_workouts:[{new:2}]};
+  await S.syncAll();
+  chk('устаревший ключ удаляется', localStorage.getItem('gymai_presets')===null, localStorage.getItem('gymai_presets'));
+  chk('токен сессии не трогается', localStorage.getItem('gymai_session_token')==='keepme');
+  chk('устаревший динамический ключ удаляется', localStorage.getItem('gymai_setup_1')===null, localStorage.getItem('gymai_setup_1'));
+  chk('push отправляет только ключи данных', Array.isArray(pushed)&&pushed.indexOf('gymai_workouts')>-1&&pushed.indexOf('gymai_session_token')===-1, JSON.stringify(pushed));
+
+  /* the token filter itself */
+  chk('токены не считаются данными', K.srvIsDataKey('gymai_acct_token')===false&&K.srvIsDataKey('gymai_session_token')===false&&K.srvIsDataKey('gymai_users')===false);
+  chk('случайный чужой ключ не считается данными', K.srvIsDataKey('some_random_key')===false);
+  chk('известный ключ данных считается данными', K.srvIsDataKey('gymai_workouts')===true);
+  chk('динамический ключ дня считается данными', K.srvIsDataKey('gymai_setup_0')===true);
+  chk('srvDataKeys не отдаёт токены', (function(){localStorage.clear();['gymai_workouts','gymai_acct_token','gymai_users','gymai_setup_2'].forEach(function(k){rawSet(k,'{}');});const d=K.srvDataKeys();return d.indexOf('gymai_workouts')>-1&&d.indexOf('gymai_setup_2')>-1&&d.indexOf('gymai_acct_token')===-1&&d.indexOf('gymai_users')===-1;})());
+};
+
 /* ---------- 4. run ---------- */
+(async function main(){
 const which=process.argv[2]||'all';
 const names=which==='all'?Object.keys(SUITES):[which];
 let bad=0;
 for(const n of names){
   console.log('\n===== '+n+' =====');
   const before=out.length;
-  try{ SUITES[n](); }
+  try{ await SUITES[n](); }
   catch(e){ console.log('❌ набор упал:',e.message); bad++; }
   const mine=out.slice(before);
   const passed=mine.filter(x=>x[1]).length;
@@ -318,3 +361,4 @@ for(const n of names){
 }
 console.log('\n'+(bad===0?'✅ ВСЕ ТЕСТЫ ПРОЙДЕНЫ':'❌ провалов: '+bad));
 process.exit(bad===0?0:1);
+})();
