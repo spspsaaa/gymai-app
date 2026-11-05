@@ -1,0 +1,13 @@
+{
+  "name": "gymai-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GYM AI mini app frontend (Telegram WebApp)",
+  "scripts": {
+    "test": "node tests/run.js",
+    "test:feature": "node tests/run.js feature",
+    "test:regression": "node tests/run.js regression",
+    "test:sync": "node tests/run.js sync"
+  },
+  "engines": { "node": ">=20" }
+}
