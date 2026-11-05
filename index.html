@@ -304,6 +304,35 @@ body.tg-fullscreen .app{padding-top:calc(env(safe-area-inset-top) + var(--tg-top
 body.tg-fullscreen .topbar{padding-top:4px}
 
 
+
+/* ---------- server admin panel ---------- */
+.admin-badge.pro{background:var(--lime);color:var(--accent-ink)}
+.admin-btn:disabled{opacity:.5;cursor:default}
+.admin-btn{flex:none;font-size:12px;font-weight:700;padding:8px 13px;border-radius:12px;border:1px solid var(--line);background:var(--surface-3);color:var(--text);cursor:pointer}
+.admin-card{background:var(--surface-1);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+.admin-err{font-size:12px;color:#ff7b7b;min-height:16px;margin-top:6px}
+.admin-row .meta span{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.admin-row .meta{flex:1;min-width:0}
+.admin-row:last-child{border-bottom:0}
+.admin-search{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;color:#fff;font-size:14px;padding:11px 13px;outline:none;margin-top:12px}
+.admin-stat strong{display:block;font-size:22px;font-weight:800;color:var(--lime-text)}
+.admin-stat2 span{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.admin-stat2{background:var(--surface-1);border:1px solid var(--line);border-radius:16px;padding:13px;text-align:center}
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:14px}
+.admin-user .avatar{width:38px;height:38px;border-radius:12px;background:var(--accent-soft);color:var(--lime-text);display:grid;place-items:center;font-weight:800}
+.admin-user .meta b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-user{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+
+.admin-mini{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);color:inherit;
+  border-radius:10px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
+.admin-mini:hover{background:rgba(255,255,255,.14)}
+.admin-mini.danger{color:#ff8a8a}
+.admin-empty{color:var(--muted,#8a8f9a);text-align:center;padding:18px 8px;font-size:13px}
+.admin-row-main{flex:1;min-width:0}
+.admin-row-email{font-weight:700;font-size:13px;word-break:break-all}
+.admin-row-sub{font-size:11px;color:var(--muted,#8a8f9a);margin-top:2px;word-break:break-all}
+.admin-row-side{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -471,6 +500,65 @@ body.tg-fullscreen .topbar{padding-top:4px}
       <p class="tiny-note" data-i18n="demoOnly">В этой сборке тариф переключается локально на устройстве — без серверной оплаты</p>
       <div class="section-head"><h3 data-i18n="about">О приложении</h3></div><div class="card"><div class="setting"><div><b>GYM AI</b><small id="aboutVersion">Version 0.10 · Preview</small></div></div><p class="sub" data-i18n="aboutText">Твой тренировочный журнал и AI-помощник. Все основные функции бесплатны.</p></div>
     </section>
+<section id="profile" class="screen">
+      <div class="eyebrow" data-i18n="personalSpace">ТВОЁ ПРОСТРАНСТВО</div><h1 class="page-title" data-i18n="profileTitle">Профиль</h1><p class="sub" data-i18n="profileSub">Настрой приложение под себя.</p>
+      <div class="card" style="margin-top:20px"><div class="profile-row"><div class="avatar" id="avatarLetter">A</div><div style="flex:1"><b id="profileName">Атлет</b><div class="sub" id="profileSubLine" data-i18n="telegramUser">Пользователь GYM AI</div></div><button class="icon-btn" id="editName">✎</button></div>
+        <div class="contact-row" id="accRow" style="display:none"><div><b data-i18n="signedInAs">Вы вошли как</b><div class="contact-val" id="accEmail"></div></div><button class="secondary" id="logoutBtn" data-i18n="logout">Выйти</button></div>
+        <div class="contact-row" id="loginRow"><div><b data-i18n="account">Аккаунт</b><div class="contact-val" data-i18n="loginRequired">Нужен вход в аккаунт</div></div><button class="primary" id="goLogin" data-i18n="signIn">Войти</button></div>
+      </div>
+      <button class="secondary wide" id="installBtn" style="margin-top:14px;width:100%;color:inherit;font-size:14px;cursor:pointer">📲 Добавить на экран «домой»</button>
+      <div class="section-head"><h3 data-i18n="preferences">Предпочтения</h3></div><div class="card"><div class="setting"><div><b data-i18n="experience">Тренировочный опыт</b><small data-i18n="experienceSub">Выбери комфортный уровень</small></div><select id="experience" class="lang-select"><option value="beginner" data-i18n="beginner">Начальный</option><option value="intermediate" data-i18n="intermediate">Средний</option><option value="advanced" data-i18n="advanced">Продвинутый</option></select></div><div class="setting"><div><b data-i18n="reminders">Напоминания</b><small data-i18n="remindersSub">Напоминать о запланированных занятиях</small></div><button class="switch on" id="reminderSwitch" aria-label="Toggle reminders"></button></div></div>
+      <div class="section-head"><h3 data-i18n="tariffTitle">Твой тариф</h3></div>
+      <div id="planFreeCard" class="plan-card"><div class="plan-top"><div><div class="plan-name" data-i18n="planFree">AI Free</div><div class="plan-sub" data-i18n="planFreeSub">Базовый доступ</div></div><span class="plan-badge" id="planBadge">FREE</span></div>
+        <div class="plan-feats"><div class="plan-feat"><span class="mk">✓</span><span data-i18n="featureFree">Журнал тренировок и прогресс</span></div><div class="plan-feat" id="featCoach"><span class="mk">✓</span><span data-i18n="featureCoach">AI-коуч: 10 сообщений в день</span></div><div class="plan-feat" id="featPlan"><span class="mk">✓</span><span data-i18n="featureOnePlan">Одна тренировочная программа</span></div></div>
+        <div class="limit-bar"><div class="limit-fill" id="limitFill" style="width:100%"></div></div><div class="limit-note" id="limitNote"></div>
+      </div>
+      <div id="planProCard" class="plan-card pro" style="display:none"><div class="plan-top"><div><div class="plan-name" data-i18n="planPro">AI Pro</div><div class="plan-sub" data-i18n="planProSub">Все возможности</div></div><span class="plan-badge pro" data-i18n="proLabel">PRO</span></div>
+        <div class="plan-feats"><div class="plan-feat"><span class="mk">✓</span><span data-i18n="featureProCoach">AI-коуч без ограничений</span></div><div class="plan-feat"><span class="mk">✓</span><span data-i18n="featureProGenerator">Генератор программ под твой график</span></div><div class="plan-feat"><span class="mk">✓</span><span data-i18n="featureProTechnique">Разбор техники по упражнениям</span></div><div class="plan-feat"><span class="mk">✓</span><span data-i18n="featureProExport">Экспорт данных тренировок</span></div></div>
+      </div>
+      <button class="primary wide" id="upgradeBtn" data-i18n="upgrade">Перейти на Pro</button>
+      <p class="tiny-note" data-i18n="demoOnly">В этой сборке тариф переключается локально на устройстве — без серверной оплаты</p>
+      <div class="section-head"><h3 data-i18n="about">О приложении</h3></div><div class="card"><div class="setting"><div><b>GYM AI</b><small id="aboutVersion">Version 0.10 · Preview</small></div></div><p class="sub" data-i18n="aboutText">Твой тренировочный журнал и AI-помощник. Все основные функции бесплатны.</p></div>
+    </section>
+
+    <section id="admin" class="screen">
+      <div class="eyebrow">GYM AI</div><h1 class="page-title">Админ-панель</h1>
+      <p class="sub">Серверная панель: аккаунты и тарифы хранятся в базе данных.</p>
+
+      <div id="adminLoginView">
+        <div class="admin-login-wrap">
+          <div class="card" style="margin-top:18px">
+            <div class="eyebrow">ДОСТУП</div>
+            <input id="adminLoginName" class="admin-input" type="text" placeholder="Логин" autocomplete="username" style="margin-top:12px">
+            <input id="adminLoginPass" class="admin-input" type="password" placeholder="Пароль" autocomplete="current-password">
+            <button class="primary wide" id="adminLoginBtn" style="width:100%">Войти</button>
+            <div class="admin-err" id="adminLoginErr"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="adminPanelView" style="display:none">
+        <div class="admin-lock-note">Данные берутся с сервера: аккаунты, тарифы и статистика. Изменения видны всем устройствам.</div>
+        <div class="admin-stats2">
+          <div class="admin-stat2"><strong id="admStatUsers">0</strong><span>Аккаунтов</span></div>
+          <div class="admin-stat2"><strong id="admStatPro">0</strong><span>С Pro</span></div>
+          <div class="admin-stat2"><strong id="admStatFree">0</strong><span>Free</span></div>
+        </div>
+        <div class="section-head"><h3>Аккаунты</h3></div>
+        <input id="adminSearch" class="admin-search" type="search" placeholder="Поиск по email или имени">
+        <div class="card" id="adminUserList" style="margin-top:12px"></div>
+        <div class="plan-actions" style="margin-top:16px">
+          <button class="secondary" id="adminExport">Экспорт в JSON</button>
+          <button class="secondary" id="adminResetAll">Снять все Pro</button>
+          <button class="secondary" id="adminGrantAll">Выдать Pro всем</button>
+        </div>
+        <div class="plan-actions" style="margin-top:8px">
+          <button class="secondary" id="adminLogout">Выйти из админки</button>
+          <button class="secondary" id="adminBack">Назад в приложение</button>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 <nav class="bottom-nav"><button class="nav-item active" data-tab="workout"><span class="nav-icon">▥</span><span data-i18n="navGym">Зал</span></button><button class="nav-item" data-tab="session"><span class="nav-icon">✎</span><span data-i18n="navSession">Тренировка</span></button><button class="nav-item" data-tab="progress"><span class="nav-icon">▤</span><span data-i18n="navProgress">История</span></button><button class="nav-item" data-tab="coach"><span class="nav-icon">✦</span><span>AI Coach</span></button><button class="nav-item" data-tab="profile"><span class="nav-icon">◉</span><span data-i18n="navProfile">Профиль</span></button></nav>
@@ -481,7 +569,7 @@ body.tg-fullscreen .topbar{padding-top:4px}
 <div class="modal" id="confirmModal"><div class="sheet"><div class="sheet-head"><h2 id="confirmTitle" data-i18n="confirmTitle">Подтверждение</h2><button class="close" id="confirmClose">×</button></div><p class="sub" id="confirmText" style="margin:0 0 14px"></p><div class="plan-actions"><button class="secondary" id="confirmNo" data-i18n="confirmNo">Отмена</button><button class="primary" id="confirmYes" data-i18n="confirmYes">Удалить</button></div></div></div>
 <div class="toast" id="toast">Сохранено</div>
 <script>
-const APP_VERSION='0.33';
+const APP_VERSION='0.35';
 const translations={
 ru:{seEyebrow:'ТРЕНИРОВКА НЕ НАЧАТА',seTitle:'Готов начать?',seText:'Выбери программу или начни свободную тренировку — упражнения добавишь по ходу.',sePick:'С чего начнём',seFree:'Свободная тренировка',seFreeSub:'Пустая — добавляй упражнения сам',seStart:'Начать',seStartPlanned:'Начать запланированную тренировку',planBookedNoPlan:'Тренировка запланирована',howtoEyebrow:'КАК ПОЛЬЗОВАТЬСЯ',howtoTitle:'Как открыть в Telegram',howtoSub:'Несколько шагов — и приложение работает как полноценный мини-приложение.',howtoS1t:'Открой бота в Telegram',howtoS1d:'Нажми кнопку «Открыть» или перейди по ссылке-приглашению от тренера.',howtoS2t:'Запусти приложение',howtoS2d:'Внизу экрана нажми «Открыть приложение» — откроется GYM AI.',howtoS3t:'Создай аккаунт',howtoS3d:'Регистрация нужна, чтобы сохранять тренировки. Данные хранятся на твоём устройстве.',howtoS4t:'Начни тренировку',howtoS4d:'Выбери день в «Зале», открой «Тренировку» и нажимай «+», чтобы добавить подход.',howtoBetaT:'Что работает уже сейчас',howtoBetaD:'Программы, календарь, история тренировок, редактор, темы. AI-коуч отвечает заготовками, а серверная синхронизация аккаунта появится позже.',howtoBack:'Назад в профиль',howtoOpen:'Как открыть в Telegram',welcome:'ТВОЯ ТРЕНИРОВОЧНАЯ ЗОНА',hello:'Привет, спортсмен 👋',ready:'Готов сделать сегодняшний день продуктивным?',weekplan:'ТВОЙ ПЛАН · НЕДЕЛЯ 1',heroTitle:'Сильнее с каждой тренировкой.',heroText:'Последовательность важнее идеального результата. Начни в комфортном темпе.',start:'Начать тренировку',sessionsWeek:'ТРЕНИРОВОК',volumeWeek:'ОБЪЁМ ЗА НЕДЕЛЮ',streak:'ДНЕЙ ПОДРЯД',schedule:'Расписание',viewPlan:'План недели →',planned:'ПЛАН',editPlan:'Настроить программу',yourResults:'ТВОИ РЕЗУЛЬТАТЫ',progressTitle:'Прогресс',progressSub:'Отслеживай регулярность и развитие силы.',overview:'Общая статистика',totalWorkouts:'ТРЕНИРОВОК',setsDone:'ПОДХОДОВ',totalVolume:'ОБЪЁМ, КГ',activity:'Активность',last7:'ПОСЛЕДНИЕ 7 ДНЕЙ',workoutsLogged:'Записанные тренировки',records:'Последние тренировки',noHistory:'Здесь появятся завершённые тренировки.',coachTitle:'Твой AI-тренер',coachSub:'Помощь с планом, упражнениями и тренировочным процессом.',online:'ОНЛАЙН',coachHero:'Планируй умнее. Тренируйся осознанно.',coachHeroText:'Расскажи о своём опыте и задачах — вместе разберём следующий шаг.',chooseMode:'Выбери режим',planBuilder:'Создать план',planBuilderSub:'Собрать программу под твой график',askCoach:'Спросить тренера',askCoachSub:'Обсудить упражнения и технику',coachHint:'Демо-режим интерфейса',greeting:'Привет! Я помогу разобраться с тренировочным планом. С чего начнём?',promptPlan:'Составить план',promptSplit:'Как разделить дни?',promptRest:'Отдых между подходами',aiDisclaimer:'Сейчас это демонстрационный интерфейс: ответы ИИ будут подключены через защищённый серверный API. Советы не заменяют консультацию квалифицированного специалиста.',personalSpace:'ТВОЁ ПРОСТРАНСТВО',profileTitle:'Профиль',profileSub:'Настрой приложение под себя.',telegramUser:'Пользователь GYM AI',preferences:'Предпочтения',experience:'Тренировочный опыт',experienceSub:'Выбери комфортный уровень',beginner:'Начальный',intermediate:'Средний',advanced:'Продвинутый',reminders:'Напоминания',remindersSub:'Напоминать о запланированных занятиях',language:'Язык приложения',about:'О приложении',aboutText:'Твой тренировочный журнал и AI-помощник. Все основные функции бесплатны.',navGym:'Зал',navSession:'Тренировка',navProgress:'Прогресс',navProfile:'Профиль',session:'ТРЕНИРОВКА',activeWorkout:'Текущая тренировка',logSets:'Нажми «+» у упражнения, чтобы добавить подход с весом и повторениями.',sessionAuto:'Данные сохраняются автоматически — можно выйти и вернуться позже.',continueWorkout:'Продолжить тренировку',addSetHint:'Нажми «+», чтобы добавить подход',setsCount:'Подходов: ',addSetFirst:'Добавь хотя бы один подход',restTimer:'Таймер отдыха',startTimer:'Старт',reset:'Сброс',finish:'Завершить тренировку',yourProgram:'Твоя программа',programInfo:'Демонстрационный план можно использовать как основу и адаптировать под свой опыт.',day:'День',upper:'Верх тела',lower:'Нижняя часть',full:'Всё тело',done:'Готово',sets:'подхода',reps:'повт.',kg:'кг',lastTime:'Прошлый раз:',saved:'Сохранено',finished:'Тренировка записана!',askName:'Как тебя называть?',namePlaceholder:'Твоё имя',aiPlanReply:'Давай соберём план постепенно. Сколько дней в неделю тебе удобно тренироваться и какой у тебя опыт?',aiSplitReply:'Можно начать с комфортного расписания на 2–3 дня, чередуя разные группы мышц и оставляя время на восстановление.',aiRestReply:'Отдых зависит от упражнения и самочувствия. Между тяжёлыми подходами обычно нужно больше времени, чем между лёгкими. Не спеши начинать следующий подход, если не восстановился.',aiDefault:'Могу помочь с планом, выбором упражнений и организацией тренировочной недели. Расскажи немного подробнее о своей задаче.',tariff:'Тариф',tariffTitle:'Твой тариф',planFree:'AI Free',planPro:'AI Pro',planFreeSub:'Базовый доступ',planProSub:'Все возможности',currentPlan:'Текущий тариф',upgrade:'Перейти на Pro',upgradeSub:'Откроет всё: безлимитный AI, генератор программ, разбор техники, экспорт',featureFree:'Журнал тренировок и прогресс',featureCoach:'AI-коуч: 10 сообщений в день',featureOnePlan:'Одна тренировочная программа',featureProCoach:'AI-коуч без ограничений',featureProGenerator:'Генератор программ под твой график',featureProTechnique:'Разбор техники по упражнениям',featureProExport:'Экспорт данных тренировок',freeLabel:'Бесплатно',proLabel:'Pro',limitReached:'Дневной лимит AI-коуча исчерпан',limitHint:'Обновись до Pro, чтобы спрашивать без ограничений',proOnly:'Это функция Pro',proOnlyHint:'Перейди на Pro, чтобы открыть её',dailyLeft:'Осталось сообщений сегодня: ',unlimited:'Без ограничений',demoOnly:'В этой сборке тариф переключается локально на устройстве — без серверной оплаты',signIn:'Вход',signUp:'Регистрация',account:'Аккаунт',authTitle:'Войди в GYM AI',authSub:'Данные тренировок сохраняются в аккаунте и не теряются при переустановке.',email:'Email',phone:'Телефон',password:'Пароль',passwordAgain:'Повтори пароль',name:'Имя',loginBtn:'Войти',registerBtn:'Создать аккаунт',haveAccount:'Уже есть аккаунт',noAccount:'Ещё нет аккаунта',logout:'Выйти',loginRequired:'Нужен вход в аккаунт',signedInAs:'Вы вошли как',contacts:'Контакты и восстановление',linkPhone:'Привязать телефон',linkEmail:'Привязать email',verifyCode:'Введите код из сообщения',sendCode:'Отправить код',codeSent:'Код отправлен — в демо он на экране',verify:'Подтвердить',linked:'Привязано',notLinked:'Не привязано',demoAuthNote:'Аккаунт хранится на сервере и привязан к твоему Telegram ID. Данные тренировок не теряются при переустановке или смене устройства.',networkError:'Нет связи с сервером. Проверь интернет.',authFailed:'Не удалось войти. Попробуй ещё раз.',invalidEmail:'Введите корректный email',invalidPhone:'Введите телефон в формате +7 ...',shortPassword:'Минимум 6 символов',passwordMismatch:'Пароли не совпадают',emailTaken:'Этот email уже зарегистрирован',noSuchUser:'Аккаунт с таким email не найден',wrongPassword:'Неверный пароль',authOk:'Готово!',exercise:'Упражнение',weight:'Вес',repsLabel:'Повторы',noExercises:'Нет упражнений',calendarTitle:'Календарь',calExpand:'Развернуть →',calCollapse:'Свернуть',calThisWeek:'Эта неделя',planFor:'План на',planned_:'Запланировано',setupEyebrow:'СОСТАВ',setupSub:'Отметь упражнения из плана или добавь свои — выбор сохранится и вернётся, если закрыть экран.',setupAddTitle:'СВОЁ УПРАЖНЕНИЕ',setupNamePh:'Название',setupAddBtn:'+ Добавить',setupStart:'Начать тренировку',setupEdit:'Изменить состав',setupFromPlan:'ИЗ ПЛАНА',setupCustom:'СВОЁ',setupEmpty:'В этом дне пока нет упражнений',peEyebrow:'ПРОГРАММА',peSub:'Изменения сохраняются как черновик и применяются кнопкой ниже.',peDayName:'НАЗВАНИЕ ПРОГРАММЫ',peNamePh:'Название',peSaveName:'Сохранить название',peAddProgram:'+ Добавить программу',peDelProgram:'Удалить программу',peAddEx:'+ Упражнение',peSave:'Сохранить программу',sessionAddEx:'+ Добавить упражнение',sessionExSearchPh:'Поиск упражнения',sessionExNew:'Новое упражнение',sessionExNamePh:'Название',sessionExWeightPh:'Вес (или body)',sessionExCreate:'Создать и сохранить',sessionExNone:'Ничего не найдено',exAdded:'Упражнение добавлено',exCreated:'Упражнение создано и сохранено',exDeleted:'Упражнение удалено',confirmDelEx:'Удалить упражнение?',confirmDelExText:'Упражнение «%s» будет удалено из программы. Действие нельзя отменить.',peNewProgram:'Новая программа',peNeedOne:'Нужна хотя бы одна программа',confirmTitle:'Подтверждение',confirmNo:'Отмена',confirmYes:'Удалить',confirmDelProgram:'Удалить программу?',confirmDelProgramText:'Программа «%s» будет удалена. Действие нельзя отменить.',peCatalog:'Выбор упражнения',peSearchPh:'Поиск',peApplied:'применён',peNoEx:'В этом дне нет упражнений',peNameRequired:'Введи название',progressTitle:'История',progressSub:'Каждая тренировка с подходами, повторами и весом — тапни, чтобы раскрыть.',records:'История тренировок',histEmpty:'Пока нет завершённых тренировок.',histNoWeight:'без веса',calNextWeek:'Следующая неделя',planSchedule:'Запланировать тренировку',planPick:'Выбери план тренировки',planNoPlan:'Без плана',planSave:'Сохранить',planDelete:'Удалить',planChange:'Изменить',planSaved:'Тренировка запланирована',planRemoved:'Тренировка удалена из календаря',dayNoPlan:'В этот день тренировка не запланирована',themeTitle:'Оформление',themeSub:'Тёмная или светлая тема',themeDark:'Тёмная',themeLight:'Светлая'},
 en:{seEyebrow:'WORKOUT NOT STARTED',seTitle:'Ready to start?',seText:'Pick a program or start a free workout — add exercises as you go.',sePick:'Where to start',seFree:'Free workout',seFreeSub:'Empty — add exercises yourself',seStart:'Start',seStartPlanned:'Start the planned workout',planBookedNoPlan:'Workout scheduled',howtoEyebrow:'HOW TO USE',howtoTitle:'Open it in Telegram',howtoSub:'A few steps and the app works as a full mini app.',howtoS1t:'Open the bot in Telegram',howtoS1d:'Tap “Open” or use the invite link from your coach.',howtoS2t:'Launch the app',howtoS2d:'Tap “Open app” at the bottom — GYM AI will start.',howtoS3t:'Create an account',howtoS3d:'Sign up so your workouts are saved. Data stays on your device.',howtoS4t:'Start a workout',howtoS4d:'Pick a day in “Gym”, open “Workout” and tap + to add a set.',howtoBetaT:'What already works',howtoBetaD:'Programs, calendar, workout history, editor, themes. The AI coach replies from templates; server-side account sync comes later.',howtoBack:'Back to profile',howtoOpen:'How to open in Telegram',welcome:'YOUR TRAINING SPACE',hello:'Hey, athlete 👋',ready:'Ready to make today count?',weekplan:'YOUR PLAN · WEEK 1',heroTitle:'Stronger with every session.',heroText:'Consistency beats perfection. Start at a comfortable pace.',start:'Start workout',sessionsWeek:'SESSIONS',volumeWeek:'WEEKLY VOLUME',streak:'DAY STREAK',schedule:'Schedule',viewPlan:'Weekly plan →',planned:'PLAN',editPlan:'Customize plan',yourResults:'YOUR RESULTS',progressTitle:'Progress',progressSub:'Track consistency and strength development.',overview:'Overview',totalWorkouts:'WORKOUTS',setsDone:'SETS',totalVolume:'VOLUME, KG',activity:'Activity',last7:'LAST 7 DAYS',workoutsLogged:'Logged workouts',records:'Recent workouts',noHistory:'Completed workouts will appear here.',coachTitle:'Your AI Coach',coachSub:'Guidance with plans, exercises and training.',online:'ONLINE',coachHero:'Plan smarter. Train mindfully.',coachHeroText:'Tell me about your experience and goals — we’ll figure out the next step.',chooseMode:'Choose a mode',planBuilder:'Build a plan',planBuilderSub:'Create a program around your schedule',askCoach:'Ask your coach',askCoachSub:'Discuss exercises and technique',coachHint:'Interface demo mode',greeting:'Hi! I can help you work through your training plan. Where should we start?',promptPlan:'Build a plan',promptSplit:'How to split days?',promptRest:'Rest between sets',aiDisclaimer:'This is currently a UI demo: AI responses will be connected through a secure server API. Guidance does not replace advice from a qualified professional.',personalSpace:'YOUR SPACE',profileTitle:'Profile',profileSub:'Make the app work for you.',telegramUser:'GYM AI member',preferences:'Preferences',experience:'Training experience',experienceSub:'Choose a comfortable level',beginner:'Beginner',intermediate:'Intermediate',advanced:'Advanced',reminders:'Reminders',remindersSub:'Reminders for planned sessions',language:'App language',about:'About',aboutText:'Your workout log and AI assistant. Core features are free.',navGym:'Gym',navSession:'Session',navProgress:'Progress',navProfile:'Profile',session:'SESSION',activeWorkout:'Active workout',logSets:'Tap + next to an exercise to add a set with weight and reps.',sessionAuto:'Your data is saved automatically — you can leave and come back later.',continueWorkout:'Continue workout',addSetHint:'Tap + to add a set',setsCount:'Sets: ',addSetFirst:'Add at least one set',restTimer:'Rest timer',startTimer:'Start',reset:'Reset',finish:'Finish workout',yourProgram:'Your program',programInfo:'This sample plan is a starting point. Adapt it to your experience.',day:'Day',upper:'Upper body',lower:'Lower body',full:'Full body',done:'Done',sets:'sets',reps:'reps',kg:'kg',lastTime:'Last time:',saved:'Saved',finished:'Workout saved!',askName:'What should we call you?',namePlaceholder:'Your name',aiPlanReply:'Let’s build a plan step by step. How many days per week would you like to train, and what is your experience level?',aiSplitReply:'You could start with a comfortable 2–3 day schedule, alternating muscle groups and leaving time for recovery.',aiRestReply:'Rest depends on the exercise and how you feel. Heavier sets generally need more recovery than lighter ones. Don’t rush into the next set if you are not ready.',aiDefault:'I can help with a plan, exercise choices and organizing your training week. Tell me a little more about what you need.',tariff:'Plan',tariffTitle:'Your plan',planFree:'AI Free',planPro:'AI Pro',planFreeSub:'Basic access',planProSub:'Everything unlocked',currentPlan:'Current plan',upgrade:'Upgrade to Pro',upgradeSub:'Unlocks all: unlimited AI, program builder, technique review, export',featureFree:'Workout journal and progress',featureCoach:'AI coach: 10 messages per day',featureOnePlan:'One training program',featureProCoach:'Unlimited AI coach',featureProGenerator:'Program builder for your schedule',featureProTechnique:'Technique review per exercise',featureProExport:'Workout data export',freeLabel:'Free',proLabel:'Pro',limitReached:'Daily AI coach limit reached',limitHint:'Upgrade to Pro to ask without limits',proOnly:'This is a Pro feature',proOnlyHint:'Upgrade to Pro to unlock it',dailyLeft:'Messages left today: ',unlimited:'Unlimited',demoOnly:'In this build the plan switches locally on your device — no server-side payment',signIn:'Sign in',signUp:'Sign up',account:'Account',authTitle:'Sign in to GYM AI',authSub:'Workout data is stored in your account and survives a reinstall.',email:'Email',phone:'Phone',password:'Password',passwordAgain:'Repeat password',name:'Name',loginBtn:'Sign in',registerBtn:'Create account',haveAccount:'Already have an account',noAccount:'No account yet',logout:'Log out',loginRequired:'Sign in required',signedInAs:'Signed in as',contacts:'Contacts and recovery',linkPhone:'Link phone',linkEmail:'Link email',verifyCode:'Enter the code from the message',sendCode:'Send code',codeSent:'Code sent — in the demo it appears on screen',verify:'Confirm',linked:'Linked',notLinked:'Not linked',demoAuthNote:'Your account lives on the server and is linked to your Telegram ID. Training data survives a reinstall or a device change.',networkError:'Cannot reach the server. Check your connection.',authFailed:'Could not sign in. Please try again.',invalidEmail:'Enter a valid email',invalidPhone:'Enter a phone like +7 ...',shortPassword:'At least 6 characters',passwordMismatch:'Passwords do not match',emailTaken:'This email is already registered',noSuchUser:'No account with this email',wrongPassword:'Wrong password',authOk:'All good!',exercise:'Exercise',weight:'Weight',repsLabel:'Reps',noExercises:'No exercises',calendarTitle:'Calendar',calExpand:'Expand →',calCollapse:'Collapse',calThisWeek:'This week',planFor:'Plan for',planned_:'Scheduled',setupEyebrow:'COMPOSITION',setupSub:'Tick the exercises from your plan or add your own — your choice is saved and will be here when you come back.',setupAddTitle:'YOUR OWN EXERCISE',setupNamePh:'Name',setupAddBtn:'+ Add',setupStart:'Start workout',setupEdit:'Edit composition',setupFromPlan:'FROM PLAN',setupCustom:'CUSTOM',setupEmpty:'No exercises in this day yet',peEyebrow:'PROGRAM',peSub:'Changes are kept as a draft and applied with the button below.',peDayName:'PROGRAM NAME',peNamePh:'Name',peSaveName:'Save name',peAddProgram:'+ Add program',peDelProgram:'Delete program',peAddEx:'+ Exercise',peSave:'Save program',sessionAddEx:'+ Add exercise',sessionExSearchPh:'Search exercise',sessionExNew:'New exercise',sessionExNamePh:'Name',sessionExWeightPh:'Weight (or body)',sessionExCreate:'Create and save',sessionExNone:'Nothing found',exAdded:'Exercise added',exCreated:'Exercise created and saved',exDeleted:'Exercise deleted',confirmDelEx:'Delete exercise?',confirmDelExText:'Exercise %s will be removed from the program. This cannot be undone.',peNewProgram:'New program',peNeedOne:'At least one program is required',confirmTitle:'Confirm',confirmNo:'Cancel',confirmYes:'Delete',confirmDelProgram:'Delete program?',confirmDelProgramText:'Program %s will be deleted. This cannot be undone.',peCatalog:'Choose exercise',peSearchPh:'Search',peApplied:'applied',peNoEx:'No exercises in this day',peNameRequired:'Enter a name',progressTitle:'History',progressSub:'Every workout with sets, reps and weight — tap to expand.',records:'Workout history',histEmpty:'No completed workouts yet.',histNoWeight:'no weight',calNextWeek:'Next week',planSchedule:'Schedule workout',planPick:'Choose a workout plan',planNoPlan:'No plan',planSave:'Save',planDelete:'Delete',planChange:'Change',planSaved:'Workout scheduled',planRemoved:'Workout removed from calendar',dayNoPlan:'No workout planned for this day',themeTitle:'Appearance',themeSub:'Dark or light theme',themeDark:'Dark',themeLight:'Light'},
@@ -530,7 +618,7 @@ function langWire(){
   if(p&&!p.__wired){p.__wired=true;p.addEventListener('click',openLangPicker);}
   if(c&&!c.__wired){c.__wired=true;c.addEventListener('click',function(){$('langModal').classList.remove('open');});}
 }
-function nav(tab){if(tab!=='auth'&&!isAuthed()){tab='auth';}let _bn=document.querySelector('.bottom-nav');if(_bn)_bn.style.display=(tab==='auth')?'none':'';if(tab!=='session'&&draft)saveDraft();document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===tab));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));if(tab==='session'){renderSession();updateStartButton()}if(tab==='progress')renderProgress();if(tab==='profile'){$('profileName').textContent=(currentUser()&&currentUser().name)||userName;renderPlan();renderAccount()}
+function nav(tab){if(tab!=='auth'&&tab!=='admin'&&!isAuthed()){tab='auth';}let _bn=document.querySelector('.bottom-nav');if(_bn)_bn.style.display=(tab==='auth')?'none':'';if(tab!=='session'&&draft)saveDraft();document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===tab));document.querySelectorAll('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));if(tab==='session'){renderSession();updateStartButton()}if(tab==='progress')renderProgress();if(tab==='profile'){$('profileName').textContent=(currentUser()&&currentUser().name)||userName;renderPlan();renderAccount()}
   try{tgUpdateMain();tgSyncBack();}catch(e){}
 updateStartButton();window.scrollTo({top:0,behavior:'smooth'})}
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.tab)));
@@ -1127,20 +1215,31 @@ function renderSession(){renderSessionMode();
 /* ---------- v0.4 tariff: AI Free / AI Pro ---------- */
 const FREE_DAILY_LIMIT=10;
 function getPlan(){
+  /* The tariff is read from the server profile; the local copy is only a
+     fallback for the very first paint before the server answers. */
+  if(SRV_PROFILE&&SRV_PROFILE.plan)return SRV_PROFILE.plan==='pro'?'pro':'free';
   let u=currentUser();
   if(u&&u.plan)return u.plan==='pro'?'pro':'free';
   return localStorage.getItem('gymai_plan')==='pro'?'pro':'free';
 }
 function setPlan(p){
   p=p==='pro'?'pro':'free';
+  /* The plan is granted by the admin panel on the server. Writing it here
+     only refreshes the local mirror. */
+  if(SRV_PROFILE)SRV_PROFILE.plan=p;
   let u=currentUser();
-  if(u){let users=getUsers();users[u.email].plan=p;saveUsers(users);}
+  if(u){let users=getUsers();users[u.email]=Object.assign({},users[u.email]||{},{plan:p});saveUsers(users);}
   else localStorage.setItem('gymai_plan',p);
   renderPlan();
 }
 function isPro(){return getPlan()==='pro'}
-function coachUsageToday(){let d=new Date().toISOString().slice(0,10);let u=JSON.parse(localStorage.getItem('gymai_coach_usage')||'{}');return u[d]||0}
-function bumpCoachUsage(){let d=new Date().toISOString().slice(0,10);let u=JSON.parse(localStorage.getItem('gymai_coach_usage')||'{}');u[d]=(u[d]||0)+1;localStorage.setItem('gymai_coach_usage',JSON.stringify(u))}
+/* The free-tier counter is kept on the server, so the limit cannot be
+   bypassed by clearing the browser storage. The local counter is only a
+   mirror for the first paint. */
+let SRV_COACH_USED=0;
+function coachUsageToday(){return Number(SRV_COACH_USED||0)}
+function bumpCoachUsage(){SRV_COACH_USED=Number(SRV_COACH_USED||0)+1;
+  try{let d=new Date().toISOString().slice(0,10);let u=JSON.parse(localStorage.getItem('gymai_coach_usage')||'{}');u[d]=(u[d]||0)+1;localStorage.setItem('gymai_coach_usage',JSON.stringify(u))}catch(e){}}
 function coachLeft(){if(isPro())return Infinity;return Math.max(0,FREE_DAILY_LIMIT-coachUsageToday())}
 function renderPlan(){
   let pro=isPro();
@@ -1172,12 +1271,44 @@ $('upgradeBtn').onclick=function(){setPlan('pro');showToast(t('planPro')+' ✓')
 
 /* ---------- v0.4 auth: account, session, contacts ---------- */
 const USERS_KEY='gymai_users',SESSION_KEY='gymai_session';
+/* The account list and the tariff live on the SERVER now. The browser keeps
+   only a cached copy of the signed-in profile, so a reinstall or a redeploy
+   cannot lose the name, the phone binding or the Pro tariff. */
+let SRV_PROFILE=null;                 /* the server profile of the signed-in user */
 function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'{}')}catch(e){return {}}}
 function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u))}
 function getSession(){try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(e){return null}}
 function setSession(s){if(s)localStorage.setItem(SESSION_KEY,JSON.stringify(s));else localStorage.removeItem(SESSION_KEY)}
-function currentUser(){let s=getSession();if(!s)return null;let u=getUsers()[s.email];if(!u){setSession(null);return null}return u}
+function currentUser(){
+  let s=getSession(); if(!s)return null;
+  if(SRV_PROFILE&&SRV_PROFILE.email)return SRV_PROFILE;
+  let u=getUsers()[s.email];
+  if(!u){setSession(null);return null}
+  return u;
+}
 function isAuthed(){return !!currentUser()}
+/* Pull the profile from the server and mirror it into the local cache. */
+async function refreshServerProfile(){
+  try{
+    let h=acctHeaders();
+    let r=await srvFetch(API_BASE+'/api/account/profile',{method:'GET',headers:h});
+    if(!r.ok)return null;
+    let d=await r.json();
+    SRV_PROFILE=d.profile||null;
+    if(SRV_PROFILE){
+      let users=getUsers(); let prev=users[SRV_PROFILE.email]||{};
+      users[SRV_PROFILE.email]=Object.assign({},prev,SRV_PROFILE);
+      saveUsers(users);
+      try{localStorage.setItem('gymai_plan',SRV_PROFILE.plan==='pro'?'pro':'free')}catch(e){}
+    }
+    return SRV_PROFILE;
+  }catch(e){return null}
+}
+function acctHeaders(){
+  let h={'Content-Type':'application/json'};
+  try{let t=acctToken(); if(t)h['Authorization']='Bearer '+t;}catch(e){}
+  return h;
+}
 function hashPw(p){let h=0;for(let i=0;i<p.length;i++){h=(h*31+p.charCodeAt(i))|0}return 'h'+h}
 function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(e||'').trim())}
 function validPhone(p){return /^\+?[0-9\s\-()]{7,20}$/.test(String(p||'').trim())}
@@ -1236,6 +1367,8 @@ async function doAuth(){
     /* The account token IS the server credential for email/password users,
        so server sync must be switched on for them too. */
     try{SRV.enabled=true;}catch(e){}
+    /* The server owns the profile and the tariff - read them right away. */
+    try{await refreshServerProfile();}catch(e){}
     /* mirror the account locally for the existing UI (no password hash here) */
     let users=getUsers();
     let prev=users[email]||{};
@@ -1257,10 +1390,13 @@ async function doAuth(){
        the user on the login screen. Sync continues in the background. */
     nav('workout');
     try{SRV.syncAll().then(function(){try{reloadLocalState();}catch(e){}
-      try{['renderCalendar','renderPlan','renderProgress','renderAccount','renderDays',
+      try{return refreshServerProfile();}catch(e){}
+    }).then(function(){try{return loadChatHistory();}catch(e){}})
+      .then(function(){try{
+        ['renderCalendar','renderPlan','renderProgress','renderAccount','renderDays',
         'renderExercises','renderHistory','renderPresets'].forEach(function(fn){
-        try{if(typeof window[fn]==='function')window[fn]()}catch(e){}});}catch(e){}
-    }).catch(function(){});}catch(e){}
+        try{if(typeof window[fn]==='function')window[fn]()}catch(e){}});}catch(e){}})
+      .catch(function(){});}catch(e){}
     return true;
   }catch(e){
     showAuthError(acctError('network'));
@@ -1510,9 +1646,40 @@ function coachReply(msg){let think=addMessage(lang==='ru'?'Печатаю…':'T
      if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+' :: '+t.slice(0,300))});
      return r.json();
    })
-   .then(function(d){drop();dbg('reply='+JSON.stringify(d).slice(0,200));addMessage((d&&d.reply)||localCoachReply(msg))})
+   .then(function(d){drop();dbg('reply='+JSON.stringify(d).slice(0,200));
+     let reply=(d&&d.reply)||localCoachReply(msg);
+     /* the user turn was already pushed by the submit handler */
+     chatHistory.push({role:'assistant',content:reply});
+     if(chatHistory.length>200)chatHistory=chatHistory.slice(-200);
+     addMessage(reply);
+     /* the server counted this request - read the real number back */
+     try{refreshServerProfile().then(function(){renderPlan()})}catch(e){}
+   })
    .catch(function(e){drop();dbg('ERR '+(e&&e.message?e.message:String(e)));addMessage(localCoachReply(msg))})}
-let chatHistory=[];$('chatForm').onsubmit=e=>{e.preventDefault();let v=$('chatInput').value.trim();if(!v)return;if(coachLeft()<=0){addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';showToast(t('limitReached')+' — '+t('limitHint'));renderPlan();return}addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';bumpCoachUsage();renderPlan();coachReply(v)};document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{let k=b.dataset.prompt,v=k==='plan'?t('promptPlan'):k==='split'?t('promptSplit'):t('promptRest');addMessage(v,true);chatHistory.push({role:'user',content:v});coachReply(v)});$('modePlan').onclick=()=>{if(!isPro()){showToast(t('proOnly')+' — '+t('proOnlyHint'));return}openGenerator()};$('modeChat').onclick=()=>$('chatInput').focus();
+/* The conversation is stored on the server, so it survives a reinstall and
+   follows the user to another device. */
+let chatHistory=[];
+function renderChatHistory(){
+  let box=$('messages'); if(!box)return;
+  box.innerHTML='';
+  chatHistory.slice(-60).forEach(function(m){
+    if(!m||!m.content)return;
+    let d=document.createElement('div');
+    d.className='chat-bubble'+(m.role==='user'?' me':'');
+    d.textContent=m.content;
+    box.appendChild(d);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+async function loadChatHistory(){
+  try{
+    let r=await srvFetch(API_BASE+'/api/chat/history',{method:'GET',headers:acctHeaders()});
+    if(!r.ok)return;
+    let d=await r.json();
+    if(Array.isArray(d.history)){chatHistory=d.history;renderChatHistory();}
+  }catch(e){}
+}
+$('chatForm').onsubmit=e=>{e.preventDefault();let v=$('chatInput').value.trim();if(!v)return;if(coachLeft()<=0){addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';showToast(t('limitReached')+' — '+t('limitHint'));renderPlan();return}addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';bumpCoachUsage();renderPlan();coachReply(v)};document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{let k=b.dataset.prompt,v=k==='plan'?t('promptPlan'):k==='split'?t('promptSplit'):t('promptRest');addMessage(v,true);chatHistory.push({role:'user',content:v});coachReply(v)});$('modePlan').onclick=()=>{if(!isPro()){showToast(t('proOnly')+' — '+t('proOnlyHint'));return}openGenerator()};$('modeChat').onclick=()=>$('chatInput').focus();
 themeWire();langWire();$('experience').onchange=e=>localStorage.setItem('gymai_experience',e.target.value);$('experience').value=localStorage.getItem('gymai_experience')||'beginner';$('reminderSwitch').onclick=()=>{$('reminderSwitch').classList.toggle('on');localStorage.setItem('gymai_reminders',$('reminderSwitch').classList.contains('on'))};if(localStorage.getItem('gymai_reminders')==='false')$('reminderSwitch').classList.remove('on');$('editName').onclick=()=>{let n=prompt(t('askName'),userName);if(n&&n.trim()){userName=n.trim().slice(0,32);localStorage.setItem('gymai_name',userName);$('profileName').textContent=(currentUser()&&currentUser().name)||userName;$('avatarLetter').textContent=userName[0].toUpperCase();showToast(t('saved'))}};
 $('period').onchange=()=>renderProgress();
 function periodDays(){return $('period').value==='month'?30:7}
@@ -1642,9 +1809,10 @@ const SRV={
    session right after a successful login, so isAuthed() became false and the
    app bounced back to the login screen mid-session. */
 const SRV_KEYS=['gymai_workouts','gymai_custom_plan','gymai_schedule','gymai_custom_exercises',
-  'gymai_presets','gymai_plan_prefs','gymai_reminders','gymai_experience','gymai_name'];
+  'gymai_presets','gymai_plan_prefs','gymai_reminders','gymai_experience','gymai_name',
+  'gymai_draft'];
 /* Never touched by the server sync, in either direction. */
-const SRV_LOCAL_ONLY=['gymai_session','gymai_users','gymai_acct_token','gymai_draft'];
+const SRV_LOCAL_ONLY=['gymai_session','gymai_users','gymai_acct_token'];
 
 /* Синхронизация при старте */
 (function(){
@@ -1653,6 +1821,9 @@ const SRV_LOCAL_ONLY=['gymai_session','gymai_users','gymai_acct_token','gymai_dr
     if(!ok&&!acctToken())return;
     try{SRV.enabled=true;}catch(e){}
     try{await Promise.race([SRV.syncAll(),new Promise(function(r){setTimeout(r,6000)})]);}catch(e){}
+    /* The profile, the tariff and the coach counter come from the server. */
+    try{await refreshServerProfile();}catch(e){}
+    try{await loadChatHistory();}catch(e){}
     try{
       const u=JSON.parse(localStorage.getItem('gymai_user')||'null');
       if(u&&u.plan){localStorage.setItem('gymai_plan',u.plan);}
@@ -1942,5 +2113,192 @@ if(TG){tgBoot();}
     });
   }
 })();
+
+/* ---------- server-backed admin panel ----------
+   The admin secret is exchanged for a short-lived token on the server
+   (POST /api/admin/login). The secret itself is never stored in the app. */
+const ADMIN_SECRET_KEY='gymai_admin_token';
+function adminToken(){try{return localStorage.getItem(ADMIN_SECRET_KEY)||''}catch(e){return ''}}
+function adminSetToken(v){try{if(v)localStorage.setItem(ADMIN_SECRET_KEY,v);else localStorage.removeItem(ADMIN_SECRET_KEY)}catch(e){}}
+function adminHeaders(){
+  let h={'Content-Type':'application/json'};
+  let t=adminToken();
+  if(t)h['Authorization']='Bearer '+t;
+  return h;
+}
+let ADMIN_ACCOUNTS=[];
+function adminLoggedIn(){return !!adminToken()}
+function adminEsc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];})}
+function adminShow(view){
+  let lv=$('adminLoginView'),pv=$('adminPanelView');
+  if(lv)lv.style.display=(view==='login')?'':'none';
+  if(pv)pv.style.display=(view==='panel')?'':'none';
+}
+function adminOpen(){
+  document.body.classList.add('admin-mode');
+  nav('admin');
+  if(adminLoggedIn()){adminShow('panel');adminUserList();}
+  else{adminShow('login');}
+}
+async function adminDoLogin(){
+  let n=(($('adminLoginName')||{}).value||'').trim();
+  let p=(($('adminLoginPass')||{}).value||'');
+  let err=$('adminLoginErr');
+  let secret=p||n;
+  if(!secret){if(err)err.textContent='Введите секрет администратора';return}
+  try{
+    let r=await srvFetch(API_BASE+'/api/admin/login',{method:'POST',
+      headers:{'Content-Type':'application/json','x-admin-secret':secret},
+      body:JSON.stringify({})});
+    let d={}; try{d=await r.json()}catch(e){}
+    if(!r.ok){if(err)err.textContent=(r.status===403)?'Неверный секрет':'Ошибка входа';return}
+    adminSetToken(d.token||'');
+    if(err)err.textContent='';
+    try{($('adminLoginPass')).value='';}catch(e){}
+    adminShow('panel');
+    await adminUserList();
+    showToast('Вход в админку выполнен');
+  }catch(e){
+    if(err)err.textContent='Сеть недоступна';
+  }
+}
+async function adminLogout(){
+  try{await srvFetch(API_BASE+'/api/admin/logout',{method:'POST',headers:adminHeaders(),body:'{}'});}catch(e){}
+  adminSetToken('');adminShow('login');
+  try{($('adminLoginName')).value='';($('adminLoginPass')).value='';}catch(e){}
+  showToast('Вы вышли из админки');
+}
+async function adminUserList(){
+  let box=$('adminUserList');
+  try{
+    let r=await srvFetch(API_BASE+'/api/admin/accounts',{method:'GET',headers:adminHeaders()});
+    if(r.status===401){adminSetToken('');adminShow('login');return}
+    if(!r.ok)throw new Error('http '+r.status);
+    let d=await r.json();
+    ADMIN_ACCOUNTS=Array.isArray(d.accounts)?d.accounts:[];
+  }catch(e){
+    if(box)box.innerHTML='<div class="admin-err">Не удалось загрузить список аккаунтов</div>';
+    return;
+  }
+  let q=(($('adminSearch')||{}).value||'').toLowerCase();
+  let list=ADMIN_ACCOUNTS.filter(function(a){
+    if(!q)return true;
+    return String(a.email||'').toLowerCase().indexOf(q)>=0||String(a.name||'').toLowerCase().indexOf(q)>=0;
+  });
+  let pro=ADMIN_ACCOUNTS.filter(function(a){return a.plan==='pro'}).length;
+  let su=$('admStatUsers'),sp=$('admStatPro'),sf=$('admStatFree');
+  if(su)su.textContent=ADMIN_ACCOUNTS.length;
+  if(sp)sp.textContent=pro;
+  if(sf)sf.textContent=ADMIN_ACCOUNTS.length-pro;
+  if(!box)return;
+  if(!list.length){box.innerHTML='<div class="admin-empty">Аккаунтов не найдено</div>';return}
+  box.innerHTML=list.map(function(a){
+    let isPro=a.plan==='pro';
+    let badge=isPro?'<span class="badge-ok">PRO</span>':'<span class="badge-off">FREE</span>';
+    let when=a.created?new Date(a.created).toLocaleString('ru-RU'):'—';
+    return '<div class="admin-row">'
+      +'<div class="admin-row-main">'
+      +'<div class="admin-row-email">'+adminEsc(a.email)+'</div>'
+      +'<div class="admin-row-sub">'+adminEsc(a.name||'—')+(a.telegramId?' · TG '+adminEsc(a.telegramId):'')+' · '+adminEsc(when)+'</div>'
+      +'</div>'
+      +'<div class="admin-row-side">'+badge
+      +'<button class="admin-mini" data-plan="'+(isPro?'free':'pro')+'" data-email="'+adminEsc(a.email)+'">'+(isPro?'Снять Pro':'Выдать Pro')+'</button>'
+      +'<button class="admin-mini danger" data-del="'+adminEsc(a.email)+'">Удалить</button>'
+      +'</div></div>';
+  }).join('');
+  box.querySelectorAll('button[data-plan]').forEach(function(b){
+    b.onclick=async function(){
+      let email=b.dataset.email,plan=b.dataset.plan;
+      b.disabled=true;
+      try{
+        let r=await srvFetch(API_BASE+'/api/admin/plan',{method:'POST',headers:adminHeaders(),
+          body:JSON.stringify({email:email,plan:plan})});
+        let d={};try{d=await r.json()}catch(e){}
+        if(!r.ok){showToast('Ошибка: '+(d.error||r.status));return}
+        showToast((plan==='pro'?'Pro выдан: ':'Pro снят: ')+email);
+        await adminUserList();
+      }catch(e){showToast('Сеть недоступна')}
+      finally{b.disabled=false}
+    };
+  });
+  box.querySelectorAll('button[data-del]').forEach(function(b){
+    b.onclick=async function(){
+      let email=b.dataset.del;
+      if(!confirm('Удалить аккаунт '+email+' вместе с его данными?'))return;
+      b.disabled=true;
+      try{
+        let r=await srvFetch(API_BASE+'/api/admin/delete-account',{method:'POST',headers:adminHeaders(),
+          body:JSON.stringify({email:email})});
+        let d={};try{d=await r.json()}catch(e){}
+        if(!r.ok){showToast('Ошибка: '+(d.error||r.status));return}
+        showToast('Аккаунт удалён: '+email);
+        await adminUserList();
+      }catch(e){showToast('Сеть недоступна')}
+      finally{b.disabled=false}
+    };
+  });
+}
+function adminWire(){
+  let lb=$('adminLoginBtn'); if(lb)lb.onclick=adminDoLogin;
+  let lp=$('adminLoginPass'); if(lp)lp.onkeydown=function(e){if(e.key==='Enter')adminDoLogin()};
+  let ln=$('adminLoginName'); if(ln)ln.onkeydown=function(e){if(e.key==='Enter'){($('adminLoginPass')||{}).focus()}};
+  let s=$('adminSearch'); if(s)s.oninput=adminUserList;
+  let lo=$('adminLogout'); if(lo)lo.onclick=adminLogout;
+  let ba=$('adminBack'); if(ba)ba.onclick=function(){document.body.classList.remove('admin-mode');nav('profile')};
+  let ex=$('adminExport');
+  if(ex)ex.onclick=function(){
+    let data=JSON.stringify(ADMIN_ACCOUNTS,null,2);
+    try{
+      let blob=new Blob([data],{type:'application/json'});
+      let a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);a.download='gymai-accounts.json';
+      document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+    }catch(e){}
+  };
+  let ra=$('adminResetAll');
+  if(ra)ra.onclick=async function(){
+    if(!confirm('Снять Pro у всех аккаунтов?'))return;
+    ra.disabled=true;
+    try{
+      for(let i=0;i<ADMIN_ACCOUNTS.length;i++){
+        let a=ADMIN_ACCOUNTS[i];
+        if(a.plan!=='pro')continue;
+        await srvFetch(API_BASE+'/api/admin/plan',{method:'POST',headers:adminHeaders(),
+          body:JSON.stringify({email:a.email,plan:'free'})});
+      }
+      showToast('Pro снят у всех');
+      await adminUserList();
+    }catch(e){showToast('Сеть недоступна')}
+    finally{ra.disabled=false}
+  };
+  let ga=$('adminGrantAll');
+  if(ga)ga.onclick=async function(){
+    if(!confirm('Выдать Pro всем аккаунтам?'))return;
+    ga.disabled=true;
+    try{
+      let r=await srvFetch(API_BASE+'/api/admin/grant-all',{method:'POST',headers:adminHeaders(),body:'{}'});
+      let d={};try{d=await r.json()}catch(e){}
+      showToast('Pro выдан: '+(d.granted||0));
+      await adminUserList();
+    }catch(e){showToast('Сеть недоступна')}
+    finally{ga.disabled=false}
+  };
+}
+try{adminWire();}catch(e){console.warn('[admin] wire failed',e);}
+/* The admin panel is not in the navigation. It opens only from the #admin
+   hash, so no ordinary user ever sees a link to it. */
+(function(){
+  function check(){
+    if(String(location.hash||'').toLowerCase()==='#admin'){
+      try{document.body.classList.add('admin-mode');}catch(e){}
+      adminOpen();
+    }
+  }
+  try{window.addEventListener('hashchange',check);}catch(e){}
+  try{if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',check);else check();}catch(e){}
+})();
+
 </script>
 </body></html>
