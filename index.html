@@ -1304,6 +1304,23 @@ async function refreshServerProfile(){
     return SRV_PROFILE;
   }catch(e){return null}
 }
+/* The profile name is shown in the header and in the chat, so it has to be
+   the same on every device: it is stored on the server account, not only in
+   localStorage. */
+async function saveProfileName(){
+  try{
+    let h=acctHeaders();
+    if(!h.Authorization)return;
+    let r=await srvFetch(API_BASE+'/api/account/profile',{method:'PUT',headers:h,body:JSON.stringify({name:userName})});
+    if(!r.ok)return;
+    let d=await r.json();
+    if(d&&d.profile){
+      SRV_PROFILE=d.profile;
+      let users=getUsers();let u=currentUser();
+      if(u){users[u.email]=Object.assign({},users[u.email]||{},d.profile);saveUsers(users);}
+    }
+  }catch(e){}
+}
 function acctHeaders(){
   let h={'Content-Type':'application/json'};
   try{let t=acctToken(); if(t)h['Authorization']='Bearer '+t;}catch(e){}
@@ -1378,6 +1395,19 @@ async function doAuth(){
       plan:prev.plan||'free',created:prev.created||new Date().toISOString()});
     saveUsers(users);
     setSession({email:email,at:new Date().toISOString()});
+    /* The name typed at registration belongs to the ACCOUNT, not to this
+       browser: it has to be on the server, otherwise the next device shows the
+       e-mail prefix instead of the real name. */
+    if(reg&&($('regName').value||'').trim()){
+      try{userName=name;}catch(e){}
+      try{localStorage.setItem('gymai_name',name);}catch(e){}
+      try{
+        let r=await srvFetch(API_BASE+'/api/account/profile',{method:'PUT',headers:acctHeaders(),
+          body:JSON.stringify({name:name})});
+        if(r&&r.ok){let d=await r.json();if(d&&d.profile){SRV_PROFILE=d.profile;
+          let us=getUsers();us[email]=Object.assign({},us[email]||{},d.profile);saveUsers(us);}}
+      }catch(e){}
+    }
     $('authPassword').value='';$('authPassword2').value='';
     showToast(t('authOk'));
     renderAccount();
@@ -1680,7 +1710,7 @@ async function loadChatHistory(){
   }catch(e){}
 }
 $('chatForm').onsubmit=e=>{e.preventDefault();let v=$('chatInput').value.trim();if(!v)return;if(coachLeft()<=0){addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';showToast(t('limitReached')+' — '+t('limitHint'));renderPlan();return}addMessage(v,true);chatHistory.push({role:'user',content:v});$('chatInput').value='';bumpCoachUsage();renderPlan();coachReply(v)};document.querySelectorAll('[data-prompt]').forEach(b=>b.onclick=()=>{let k=b.dataset.prompt,v=k==='plan'?t('promptPlan'):k==='split'?t('promptSplit'):t('promptRest');addMessage(v,true);chatHistory.push({role:'user',content:v});coachReply(v)});$('modePlan').onclick=()=>{if(!isPro()){showToast(t('proOnly')+' — '+t('proOnlyHint'));return}openGenerator()};$('modeChat').onclick=()=>$('chatInput').focus();
-themeWire();langWire();$('experience').onchange=e=>localStorage.setItem('gymai_experience',e.target.value);$('experience').value=localStorage.getItem('gymai_experience')||'beginner';$('reminderSwitch').onclick=()=>{$('reminderSwitch').classList.toggle('on');localStorage.setItem('gymai_reminders',$('reminderSwitch').classList.contains('on'))};if(localStorage.getItem('gymai_reminders')==='false')$('reminderSwitch').classList.remove('on');$('editName').onclick=()=>{let n=prompt(t('askName'),userName);if(n&&n.trim()){userName=n.trim().slice(0,32);localStorage.setItem('gymai_name',userName);$('profileName').textContent=(currentUser()&&currentUser().name)||userName;$('avatarLetter').textContent=userName[0].toUpperCase();showToast(t('saved'))}};
+themeWire();langWire();$('experience').onchange=e=>localStorage.setItem('gymai_experience',e.target.value);$('experience').value=localStorage.getItem('gymai_experience')||'beginner';$('reminderSwitch').onclick=()=>{$('reminderSwitch').classList.toggle('on');localStorage.setItem('gymai_reminders',$('reminderSwitch').classList.contains('on'))};if(localStorage.getItem('gymai_reminders')==='false')$('reminderSwitch').classList.remove('on');$('editName').onclick=()=>{let n=prompt(t('askName'),userName);if(n&&n.trim()){userName=n.trim().slice(0,32);localStorage.setItem('gymai_name',userName);$('profileName').textContent=(currentUser()&&currentUser().name)||userName;$('avatarLetter').textContent=userName[0].toUpperCase();saveProfileName();showToast(t('saved'))}};
 $('period').onchange=()=>renderProgress();
 function periodDays(){return $('period').value==='month'?30:7}
 renderAccount();
@@ -1770,10 +1800,15 @@ const SRV={
     let any=false;
     for(const k of (keys||[])){
       /* only known data keys leave the device — never tokens, never chat history */
-      if(SRV_KEYS.indexOf(k)<0)continue;
+      if(!srvIsDataKey(k))continue;
       const raw=localStorage.getItem(k);
       if(raw===null)continue;
-      try{patch[k]=JSON.parse(raw);any=true;}catch(e){}
+      /* Most values are stored as JSON, but a few (name, experience, reminders,
+         theme) are stored as plain strings. JSON.parse throws on those and the
+         key was silently dropped, so the value never reached the server and was
+         lost on reinstall. Plain strings are wrapped in a marker instead. */
+      try{patch[k]=JSON.parse(raw);any=true;}
+      catch(e){patch[k]={__raw:raw};any=true;}
     }
     if(!any)return;
     try{
@@ -1784,22 +1819,24 @@ const SRV={
     if(!this.hasAuth())return;
     const remote=await this.pull();
     if(remote){
+      const local=[];
+      try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k)local.push(k);}}catch(e){}
       for(const k in remote){
-        if(SRV_KEYS.indexOf(k)<0)continue;
-        if(remote[k]!==null&&remote[k]!==undefined){
-          try{localStorage.setItem(k,JSON.stringify(remote[k]));}catch(e){}
-        }
+        if(!srvIsDataKey(k))continue;
+        const v=remote[k];
+        if(v===null||v===undefined)continue;
+        try{localStorage.setItem(k,srvDecode(v));}catch(e){}
       }
       /* The server is the source of truth: a key the account does NOT have
          must not survive from the previous owner on this device. */
-      for(const k of SRV_KEYS){
-        if(SRV_LOCAL_ONLY.indexOf(k)>=0)continue;
+      for(const k of local){
+        if(!srvIsDataKey(k))continue;
         if(remote[k]===null||remote[k]===undefined){
           try{localStorage.removeItem(k);}catch(e){}
         }
       }
     }
-    await this.push(SRV_KEYS);
+    await this.push(srvDataKeys());
   }
 };
 /* Keys the account state is made of. The AUTH keys (gymai_session, gymai_users,
@@ -1810,9 +1847,40 @@ const SRV={
    app bounced back to the login screen mid-session. */
 const SRV_KEYS=['gymai_workouts','gymai_custom_plan','gymai_schedule','gymai_custom_exercises',
   'gymai_presets','gymai_plan_prefs','gymai_reminders','gymai_experience','gymai_name',
-  'gymai_draft'];
+  'gymai_draft','gymai_theme','gymai_coach_usage','gymai_applied_preset'];
 /* Never touched by the server sync, in either direction. */
-const SRV_LOCAL_ONLY=['gymai_session','gymai_users','gymai_acct_token'];
+const SRV_LOCAL_ONLY=['gymai_session','gymai_users','gymai_acct_token','gymai_session_token','gymai_admin_token','gymai_tg_user','gymai_user','gymai_plan'];
+/* The workout setup is stored under a per-day key (gymai_setup_0, gymai_setup_1...),
+   so the list of keys is dynamic and cannot be a constant. */
+const SRV_KEY_PREFIXES=['gymai_setup_'];
+function srvIsDataKey(k){
+  if(!k)return false;
+  if(SRV_LOCAL_ONLY.indexOf(k)>=0)return false;
+  if(SRV_KEYS.indexOf(k)>=0)return true;
+  for(const p of SRV_KEY_PREFIXES){if(String(k).indexOf(p)===0)return true;}
+  return false;
+}
+/* All data keys currently present in localStorage. */
+function srvDataKeys(){
+  const out=[];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(srvIsDataKey(k))out.push(k);
+    }
+  }catch(e){}
+  return out;
+}
+/* A plain string was wrapped in a marker on the way up, so it can be restored
+   exactly as it was. */
+function srvDecode(v){
+  /* A plain string that travelled up is wrapped in a marker. Older state may
+     hold a bare string instead, so a bare string is treated as raw text too. */
+  if(typeof v==='string')return v;
+  if(v&&typeof v==='object'&&!Array.isArray(v)&&typeof v.__raw==='string')return v.__raw;
+  return JSON.stringify(v);
+}
+
 
 /* Синхронизация при старте */
 (function(){
@@ -2078,7 +2146,7 @@ if(TG){tgBoot();}
   Storage.prototype.setItem=function(k,v){
     try{orig.call(this,k,v);}catch(e){}
     try{
-      if(String(k).indexOf('gymai_')===0&&SRV_KEYS.indexOf(k)>=0){
+      if(typeof srvIsDataKey==='function'&&srvIsDataKey(k)){
         clearTimeout(timer);
         timer=setTimeout(function(){SRV.push([k]);},600);
       }
