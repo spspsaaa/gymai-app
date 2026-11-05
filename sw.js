@@ -1,4 +1,4 @@
-const CACHE = 'gymai-v9';
+const CACHE = 'gymai-v10';
 self.addEventListener('install', e => {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'])).catch(()=>{}));
