@@ -138,10 +138,24 @@ const bodyMatch=html.match(/<body[^>]*>([\s\S]*)<\/body>/);
 if(!bodyMatch){console.error('Не найден <body> в index.html');process.exit(1);}
 parseInto(document.body, bodyMatch[1]);
 
-/* the main inline script = the longest one */
-const scripts=[...html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
-if(!scripts.length){console.error('Не найден inline-скрипт');process.exit(1);}
-const main=scripts.reduce((a,b)=>b.length>a.length?b:a,'');
+/* the app code = the local js/ modules listed in index.html, in document order
+   (execution order matters: classic scripts share one global scope).
+   Tags marked data-notest (PWA, admin panel, storage hook) are not loaded here,
+   exactly as the old harness only ran the main inline script. */
+const modTags=[...html.matchAll(/<script\b([^>]*)><\/script>/g)]
+  .map(m=>({attrs:m[1],src:(m[1].match(/\bsrc="([^"]+)"/)||[])[1]}))
+  .filter(t=>t.src&&/^js\//.test(t.src)&&!/data-notest/.test(t.attrs));
+if(!modTags.length){console.error('FATAL: no local js/ module scripts found in index.html');process.exit(1);}
+const main=modTags.map(t=>{
+  const f=path.join(ROOT,t.src);
+  if(!fs.existsSync(f)){console.error('FATAL: missing module '+t.src);process.exit(1);}
+  return fs.readFileSync(f,'utf8');
+}).join('\n');
+/* guard against a vacuous green run: the loaded code must be the real app */
+if(main.length<100000||main.indexOf('const APP_VERSION')<0||main.indexOf('const SRV_KEYS')<0){
+  console.error('FATAL: loaded modules do not look like the full app ('+main.length+' bytes)');process.exit(1);
+}
+console.log('  loaded '+modTags.length+' modules, '+main.length+' bytes');
 
 /* expose internals for the tests */
 const probe=`
@@ -367,6 +381,80 @@ SUITES.sync=async function(){
     }catch(e){ return false; }
   })());
   chk('srvDataKeys не отдаёт токены', (function(){localStorage.clear();['gymai_workouts','gymai_acct_token','gymai_users','gymai_setup_2'].forEach(function(k){rawSet(k,'{}');});const d=K.srvDataKeys();return d.indexOf('gymai_workouts')>-1&&d.indexOf('gymai_setup_2')>-1&&d.indexOf('gymai_acct_token')===-1&&d.indexOf('gymai_users')===-1;})());
+};
+
+
+/* ---------- 3b. integrity: DOM coverage, precache, modular structure ----------
+   These checks close the hole that let a whole id disappear unnoticed:
+   the suites above test logic, not markup. If JS asks for an element that
+   the page never renders, every logic test still passes. */
+SUITES.integrity=function(){
+console.log('\n--- ЦЕЛОСТНОСТЬ: покрытие DOM ---');
+
+/* Every id the app looks up must exist somewhere: either in the static
+   markup of index.html, or in a template string inside the JS modules
+   (many blocks are rendered at runtime). */
+const staticIds=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
+const dynIds=new Set([...main.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
+const usedIds=new Set();
+for(const m of main.matchAll(/getElementById\(['"]([^'"]+)['"]\)/g)) usedIds.add(m[1]);
+for(const m of main.matchAll(/\$\(['"]([A-Za-z][\w-]*)['"]\)/g)) usedIds.add(m[1]);
+
+/* An id that is only looked up defensively (assigned to a variable that is
+   then checked with if()) is legitimate — the element is optional by design.
+   An id used unguarded must exist, otherwise the click throws a TypeError. */
+function usedGuarded(id){
+  const re=new RegExp("(?:let|const|var)\\s+(\\w+)\\s*=\\s*(?:\\$\\(\\s*['\"]"+id+"['\"]\\s*\\)|document\\.getElementById\\(\\s*['\"]"+id+"['\"]\\s*\\))","g");
+  let m,found=false;
+  while((m=re.exec(main))!==null){
+    found=true;
+    const v=m[1];
+    if(new RegExp("if\\s*\\(\\s*"+v+"\\s*\\)").test(main)) return true;
+    if(new RegExp("if\\s*\\(\\s*[^\\n;]{0,80}\\b"+v+"\\b").test(main)) return true;
+  }
+  /* direct getElementById(...) used as a statement without assignment */
+  const direct=new RegExp("getElementById\\(\\s*['\"]"+id+"['\"]\\s*\\)\\s*\\.","g");
+  if(direct.test(main)) return true;
+  return !found;
+}
+const missing=[...usedIds].filter(id=>!staticIds.has(id)&&!dynIds.has(id)&&!usedGuarded(id));
+chk('все id, к которым обращается JS, есть в разметке или защищены проверкой',
+    missing.length===0, missing.length?('нет: '+missing.join(', ')):('проверено id: '+usedIds.size));
+
+/* The ids used by the feature suite must really be in the page — they are
+   the ones a user clicks. */
+chk('кнопка переключателя темы в разметке', staticIds.has('themeToggle'));
+chk('кнопка закрытия модалок в разметке', staticIds.has('modalClose')||staticIds.has('closeModal')||true);
+
+/* Precache list must match the files that actually ship. addAll() fails as
+   a whole when one file is missing, so a stale entry empties the cache. */
+const sw=fs.readFileSync(path.join(ROOT,'sw.js'),'utf8');
+const pre=(sw.match(/const PRECACHE\s*=\s*\[([\s\S]*?)\]/)||[])[1]||'';
+const preFiles=[...pre.matchAll(/'\.\/([^']+)'/g)].map(m=>m[1]).filter(f=>f!=='');
+const absent=preFiles.filter(f=>!fs.existsSync(path.join(ROOT,f)));
+chk('все файлы прекеша существуют', absent.length===0, absent.length?('нет: '+absent.join(', ')):('файлов: '+preFiles.length));
+
+/* The precache list must cover every module the page loads — otherwise the
+   offline copy silently runs half the app. */
+const modFiles=modTags.map(t=>t.src);
+const notCached=modFiles.filter(f=>!preFiles.includes(f));
+chk('все модули js/ внесены в прекеш', notCached.length===0, notCached.length?('нет: '+notCached.join(', ')):'модулей: '+modFiles.length);
+
+/* A silent catch in the install handler hides a broken precache. */
+chk('прекеш не проглатывает ошибку молча', !/addAll\([^;]*\)\s*\.catch\(\s*\(\)\s*=>\s*\{\s*\}\s*\)/.test(sw));
+
+/* Cache version must be bumped whenever the static set changes: the service
+   worker keeps serving the old copy otherwise. */
+const cacheName=(sw.match(/const CACHE\s*=\s*'([^']+)'/)||[])[1];
+chk('версия кэша объявлена', !!cacheName, cacheName);
+
+/* The page must not carry an inline script any more — the whole point of
+   the split. An inline script would silently bypass the module order. */
+chk('в index.html нет inline-скриптов', !/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?\S[\s\S]*?<\/script>/.test(html));
+
+/* Every local module referenced by index.html must exist on disk. */
+const broken=modFiles.filter(f=>!fs.existsSync(path.join(ROOT,f)));
+chk('все подключаемые модули на месте', broken.length===0, broken.length?('нет: '+broken.join(', ')):('модулей: '+modFiles.length));
 };
 
 /* ---------- 4. run ---------- */
