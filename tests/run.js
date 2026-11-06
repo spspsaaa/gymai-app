@@ -421,6 +421,25 @@ const missing=[...usedIds].filter(id=>!staticIds.has(id)&&!dynIds.has(id)&&!used
 chk('все id, к которым обращается JS, есть в разметке или защищены проверкой',
     missing.length===0, missing.length?('нет: '+missing.join(', ')):('проверено id: '+usedIds.size));
 
+/* A duplicated id in the markup renders the same screen twice. The user
+   scrolls and meets a second copy of the profile — the block was duplicated
+   during the modular split, so guard the whole document, not just profile. */
+const allIds=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+const idCounts={};
+for(const id of allIds) idCounts[id]=(idCounts[id]||0)+1;
+const dupIds=Object.keys(idCounts).filter(id=>idCounts[id]>1);
+chk('в разметке нет повторяющихся id', dupIds.length===0,
+    dupIds.length?('дублируются: '+dupIds.join(', ')):(('проверено id: '+allIds.length)));
+
+/* Every screen must exist exactly once — a duplicated screen shows up twice
+   when you scroll through the tab. */
+const screens=[...html.matchAll(/<section id="([^"]+)" class="screen/g)].map(m=>m[1]);
+const scrCounts={};
+for(const s of screens) scrCounts[s]=(scrCounts[s]||0)+1;
+const dupScr=Object.keys(scrCounts).filter(s=>scrCounts[s]>1);
+chk('каждый экран (section.screen) встречается один раз', dupScr.length===0,
+    dupScr.length?('дублируются: '+dupScr.join(', ')):(('экранов: '+screens.length)));
+
 /* The ids used by the feature suite must really be in the page — they are
    the ones a user clicks. */
 chk('кнопка переключателя темы в разметке', staticIds.has('themeToggle'));
